@@ -44,16 +44,6 @@ export default async function CandidatePage({ params }: { params: Promise<{ id: 
       </section>
 
       <aside className="space-y-4">
-        <div className="panel p-4">
-          <h2 className="text-lg font-medium">Analysis checklist</h2>
-          <ul className="mt-2 text-sm text-textSecondary list-disc list-inside space-y-1">
-            <li>Confirm dips recur at approximately fixed intervals (period).</li>
-            <li>Check whether dip depth remains reasonably consistent.</li>
-            <li>Use folded view to verify one coherent transit-shaped trough.</li>
-            <li>Validate with SNR and noise index before deciding.</li>
-          </ul>
-        </div>
-
         <div className="panel p-4 space-y-3">
           <h2 className="text-lg font-medium">Metrics</h2>
           <MetricCard label="Period" value={`${candidate.metrics.periodDays.toFixed(3)} d`} hint="Regular intervals support transit interpretation" />
