@@ -1,6 +1,15 @@
 node_modules/
+exoplanet_repo_starter/
 .next/
 out/
 .DS_Store
 npm-debug.log*
+.next-dev.log
+.next-dev.err.log
 .env*
+.venv/
+venv/
+myenv/
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+notebooks/data/

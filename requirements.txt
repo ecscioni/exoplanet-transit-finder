@@ -1,0 +1,10 @@
+lightkurve>=2.5.1
+astropy>=6.0
+numpy>=1.26
+pandas>=2.2
+matplotlib>=3.8
+scikit-learn>=1.4
+requests>=2.31
+ipywidgets>=8.1
+bokeh>=3.0
+jupyterlab>=4.0
