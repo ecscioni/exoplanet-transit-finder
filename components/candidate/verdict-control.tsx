@@ -4,9 +4,6 @@ import { useMemo, useState } from 'react';
 import type { Candidate } from '@/lib/data/types';
 import { useAppStore } from '@/lib/store/app-store';
 import { buildExplanation } from '@/lib/logic/explanation-engine';
-import { useState } from 'react';
-import type { Candidate } from '@/lib/data/types';
-import { useAppStore } from '@/lib/store/app-store';
 
 export function VerdictControl({ candidate }: { candidate: Candidate }) {
   const [selected, setSelected] = useState<boolean | null>(null);
@@ -31,7 +28,7 @@ export function VerdictControl({ candidate }: { candidate: Candidate }) {
     <div className="panel p-4 space-y-4">
       <div>
         <h3 className="text-lg font-medium">Is this an exoplanet?</h3>
-        <p className="text-sm text-textSecondary mt-1">Commit to a verdict using the three charts and metrics before submitting.</p>
+        <p className="text-sm text-textSecondary mt-1">Make your call after combining chart evidence and metric context—never from one panel alone.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
@@ -48,11 +45,19 @@ export function VerdictControl({ candidate }: { candidate: Candidate }) {
             <p className="text-sm text-textSecondary mt-1">{explanation.decisionSummary}</p>
           </div>
 
-          <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-accent">Evidence signals</p>
-            <ul className="mt-2 list-disc list-inside text-sm text-textSecondary space-y-1">
-              {explanation.evidenceSignals.map((item) => <li key={item}>{item}</li>)}
-            </ul>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="rounded-lg border border-success/40 bg-success/10 p-3">
+              <p className="text-xs uppercase tracking-[0.18em] text-success">Supports transit</p>
+              <ul className="mt-2 list-disc list-inside text-sm text-textSecondary space-y-1">
+                {explanation.evidenceFor.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </div>
+            <div className="rounded-lg border border-warning/40 bg-warning/10 p-3">
+              <p className="text-xs uppercase tracking-[0.18em] text-warning">Creates doubt</p>
+              <ul className="mt-2 list-disc list-inside text-sm text-textSecondary space-y-1">
+                {explanation.evidenceAgainst.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </div>
           </div>
 
           <div>
@@ -69,34 +74,18 @@ export function VerdictControl({ candidate }: { candidate: Candidate }) {
             </ul>
           </div>
 
-          <div className="rounded-lg border border-slate-700 bg-slate-900/40 p-3">
+          <div className="rounded-lg border border-slate-700 bg-slate-900/40 p-3 space-y-2">
+            <p className="text-sm"><span className="font-semibold">Confidence:</span> {explanation.confidenceLabel}</p>
             <p className="text-sm"><span className="font-semibold">Confidence rationale:</span> {explanation.confidenceRationale}</p>
-            <p className="text-sm text-textSecondary mt-2"><span className="font-semibold text-textPrimary">Learning takeaway:</span> {explanation.learningTakeaway}</p>
-            <p className="text-xs mt-2 text-textSecondary">Common pitfall: {candidate.explanations.commonPitfall}</p>
+            <p className="text-sm text-textSecondary"><span className="font-semibold text-textPrimary">Learning takeaway:</span> {explanation.learningTakeaway}</p>
+            <p className="text-xs text-textSecondary">Common pitfall: {candidate.explanations.commonPitfall}</p>
           </div>
         </div>
       ) : (
         <div className="card p-3 text-sm text-textSecondary">
-          Tip: prioritize repeated dips at a stable interval and a coherent folded trough over isolated deep events.
+          Mentor hint: prioritize repeatability and folded coherence. Single deep events are less persuasive than stable, periodic shallow dips.
         </div>
       )}
-      <h3 className="text-lg font-medium">Is this an exoplanet?</h3>
-      <div className="grid grid-cols-2 gap-2">
-        <button onClick={() => setSelected(true)} className={`rounded-lg p-2 border ${selected === true ? 'border-accent bg-accent/15' : 'border-slate-600'}`}>Yes</button>
-        <button onClick={() => setSelected(false)} className={`rounded-lg p-2 border ${selected === false ? 'border-accent bg-accent/15' : 'border-slate-600'}`}>No</button>
-      </div>
-      <button onClick={submit} disabled={selected === null || submitted} className="w-full rounded-lg bg-accent text-slate-900 py-2 font-semibold disabled:opacity-50">Submit Answer</button>
-
-      {submitted ? (
-        <div className={`card p-3 ${correct ? 'border-success/70' : 'border-warning/70'}`}>
-          <p className="font-semibold">{correct ? 'Correct' : 'Not quite'}</p>
-          <p className="text-sm text-textSecondary mt-1">{candidate.explanations.conciseVerdict}</p>
-          <ul className="mt-2 list-disc list-inside text-sm text-textSecondary space-y-1">
-            {candidate.explanations.beginnerBullets.map((bullet) => <li key={bullet}>{bullet}</li>)}
-          </ul>
-          <p className="text-xs mt-2 text-textSecondary">Common pitfall: {candidate.explanations.commonPitfall}</p>
-        </div>
-      ) : null}
     </div>
   );
 }

@@ -10,9 +10,11 @@ type Props = {
   data: Data[];
   yLabel: string;
   xLabel: string;
+  teachingTitle?: string;
+  teachingBullets?: string[];
 };
 
-export function PlotCard({ title, data, yLabel, xLabel }: Props) {
+export function PlotCard({ title, data, yLabel, xLabel, teachingTitle, teachingBullets }: Props) {
   const layout: Partial<Layout> = {
     title: { text: title, font: { color: '#EAF1FF', size: 16 } },
     paper_bgcolor: 'rgba(0,0,0,0)',
@@ -24,7 +26,7 @@ export function PlotCard({ title, data, yLabel, xLabel }: Props) {
   };
 
   return (
-    <div className="card p-4">
+    <div className="card p-4 space-y-3">
       <Plot
         data={data}
         layout={layout}
@@ -32,6 +34,17 @@ export function PlotCard({ title, data, yLabel, xLabel }: Props) {
         style={{ width: '100%', height: '280px' }}
         useResizeHandler
       />
+
+      {teachingBullets?.length ? (
+        <div className="rounded-lg border border-slate-700/80 bg-slate-900/45 p-3">
+          <p className="text-xs uppercase tracking-[0.18em] text-accent">{teachingTitle ?? 'What to look for'}</p>
+          <ul className="mt-2 text-sm text-textSecondary list-disc list-inside space-y-1">
+            {teachingBullets.map((bullet) => (
+              <li key={bullet}>{bullet}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </div>
   );
 }

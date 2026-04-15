@@ -2,10 +2,12 @@ import type { Candidate } from '@/lib/data/types';
 
 export type ExplanationSections = {
   decisionSummary: string;
-  evidenceSignals: string[];
+  evidenceFor: string[];
+  evidenceAgainst: string[];
   graphReadingGuide: string[];
   metricsInterpretation: string[];
   confidenceRationale: string;
+  confidenceLabel: string;
   learningTakeaway: string;
 };
 
@@ -28,42 +30,60 @@ export function buildExplanation(candidate: Candidate): ExplanationSections {
   const noise = evaluateNoise(candidate);
   const likely = candidate.groundTruth.isExoplanet;
 
-  const evidenceSignals = likely
-    ? [
-        `Periodicity appears ${periodicity}, with recurring dips around every ${candidate.metrics.periodDays.toFixed(3)} days.`,
-        `Depth near ${candidate.metrics.depthPpm} ppm stays comparatively stable across repeated events.`,
-        'Phase-folded points align into a coherent transit-like valley rather than scattered random dips.',
-      ]
-    : [
-        `Periodicity appears ${periodicity}, which is not strong enough for a robust transit claim.`,
-        `Depth and shape vary too much relative to expected stable transit behavior (~${candidate.metrics.depthPpm} ppm target).`,
-        'Phase-folded points do not condense into one clean transit trough, indicating likely non-transit structure.',
-      ];
+  const evidenceFor = [
+    `Recurring features align near a period of ${candidate.metrics.periodDays.toFixed(3)} days (${periodicity} repeatability).`,
+    `Observed depth (~${candidate.metrics.depthPpm} ppm) is coherent enough to track across events.`,
+    candidate.metrics.snr >= 7
+      ? `SNR ${candidate.metrics.snr.toFixed(1)} keeps the signal distinguishable from background scatter.`
+      : `SNR ${candidate.metrics.snr.toFixed(1)} is modest, so confidence must rely on shape and periodic agreement too.`,
+  ];
+
+  const evidenceAgainst = [
+    noise === 'high'
+      ? 'Noise level is high; random fluctuations can imitate transit-like features.'
+      : noise === 'medium'
+        ? 'Moderate noise means shallow dip interpretations should stay cautious.'
+        : 'Noise is comparatively controlled, reducing random false-dip risk.',
+    periodicity === 'weak'
+      ? 'Repeatability is weak, which strongly undermines transit confidence.'
+      : 'Periodicity is not the only check—morphology and noise must still agree.',
+    candidate.metrics.consistencyScore < 0.62
+      ? 'Depth and/or duration vary enough to create a false-positive concern.'
+      : 'Depth and duration stay reasonably consistent, supporting physical plausibility.',
+  ];
 
   const graphReadingGuide = [
-    'Raw curve: first check whether dips are visible repeatedly and not only once.',
-    'Detrended curve: verify whether dips survive baseline removal; real signals usually persist.',
-    'Phase-folded view: this is the decisive panel—look for one consistent trough around a fixed phase.',
+    'Raw curve: ask whether the dimming events recur at rough intervals, not just once.',
+    'Detrended curve: confirm the same events remain after baseline correction.',
+    'Folded view: treat this as the periodicity stress-test—one coherent trough is the target pattern.',
   ];
 
   const metricsInterpretation = [
-    `SNR = ${candidate.metrics.snr.toFixed(1)}: ${candidate.metrics.snr >= 7 ? 'high enough to support trust in the observed pattern.' : 'relatively weak, so false-positive risk is higher.'}`,
-    `Consistency score = ${candidate.metrics.consistencyScore.toFixed(2)}: ${periodicity === 'strong' ? 'timing/shape are repeatable.' : 'repeatability is limited or unstable.'}`,
-    `Noise index = ${candidate.metrics.noiseIndex.toFixed(2)}: ${noise === 'low' ? 'noise is controlled, so morphology is easier to trust.' : noise === 'medium' ? 'moderate noise means caution is needed.' : 'high noise can mimic transit-like dips.'}`,
+    `Period ${candidate.metrics.periodDays.toFixed(3)} d and consistency ${candidate.metrics.consistencyScore.toFixed(2)} indicate ${periodicity} temporal reliability.`,
+    `Duration ${candidate.metrics.durationHours.toFixed(1)} h should remain similar between events; inconsistency lowers trust quickly.`,
+    `Noise index ${candidate.metrics.noiseIndex.toFixed(2)} is ${noise}, so confidence should be ${noise === 'high' ? 'conservative' : noise === 'medium' ? 'moderate' : 'less constrained by noise'}.`,
   ];
+
+  const confidenceLabel = likely
+    ? candidate.metrics.snr >= 8 && candidate.metrics.consistencyScore >= 0.75
+      ? 'Medium-high confidence transit candidate'
+      : 'Moderate confidence transit candidate'
+    : 'Low confidence for transit interpretation';
 
   return {
     decisionSummary: likely
-      ? 'More likely to be an exoplanet candidate because the combined chart and metric evidence points to repeated, coherent transit behavior.'
-      : 'Less likely to be an exoplanet candidate because periodic and morphological evidence is insufficient once noise and inconsistency are considered.',
-    evidenceSignals,
+      ? 'Overall evidence leans toward a transit interpretation: periodicity and morphology align well enough to support a likely exoplanet verdict.'
+      : 'Overall evidence does not support a robust transit interpretation once instability and noise are weighted together.',
+    evidenceFor,
+    evidenceAgainst,
     graphReadingGuide,
     metricsInterpretation,
+    confidenceLabel,
     confidenceRationale: likely
-      ? 'Confidence is driven by repeating structure + stable depth + coherent folded pattern, not by any single deep dip.'
-      : 'Confidence against transit is driven by instability and noise across multiple panels, not by one isolated feature.',
+      ? 'Confidence comes from multi-panel agreement (raw + detrended + folded) reinforced by acceptable metrics—not from one chart feature.'
+      : 'Confidence against transit comes from inconsistent or noisy evidence across panels, even when isolated segments appear transit-like.',
     learningTakeaway: likely
-      ? 'When raw/detrended/folded panels agree and metrics reinforce each other, a transit interpretation becomes credible.'
-      : 'If panels disagree or folded structure is messy, prioritize caution even when one chart segment looks transit-like.',
+      ? 'Strong reasoning means combining repeatability, shape coherence, and metric support before saying yes.'
+      : 'If periodic structure is weak or unstable, the correct move is caution, even if one dip looks compelling.',
   };
 }
